@@ -13,3 +13,4 @@ st.caption("Game đua xe Racing Attack phong cách Retro!")
 
 # Mã HTML/CSS/JS của game
 game_code = """
+<canvas id="gameCanvas" width="360" height="480"></canvas>
