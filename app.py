@@ -1,6 +1,5 @@
 ﻿import streamlit as st
 import streamlit.components.v1 as components
-import os
 
 st.set_page_config(
     page_title="Racing Attack Game",
@@ -11,12 +10,26 @@ st.set_page_config(
 st.title("🏎️ Racing Attack")
 st.caption("Game đua xe Racing Attack phong cách Retro!")
 
-# Đọc file HTML từ thư mục
-html_file_path = os.path.join(os.path.dirname(__file__), "index.html")
+# HTML/CSS/JS code
+game_code = r"""
 
-if os.path.exists(html_file_path):
-    with open(html_file_path, "r", encoding="utf-8") as f:
-        game_html = f.read()
-    components.html(game_html, height=620)
-else:
-    st.error("Không tìm thấy file index.html! Hãy tạo file index.html cùng thư mục với app.py.")
+
+
+
+
+
+
+
+HTML
+<canvas id="gameCanvas" width="360" height="480"></canvas>
+◄ Trái (A)
+
+Bắt đầu / OK
+
+Phải (D) ►
+
+Điều khiển: Phím ◄ / ► hoặc A / D | Enter / Space để chơi lại
+
+"""
+
+components.html(game_code, height=620)
