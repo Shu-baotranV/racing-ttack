@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 st.title("🏎️ Racing Attack")
-st.caption("Game đua xe Racing Attack phong cách Retro!")
+st.caption("Game đua xe Racing Attack phong cách Retro - Chọn độ khó để bắt đầu!")
 
 game_code = """
 <!DOCTYPE html>
@@ -40,11 +40,37 @@ game_code = """
     background: #000;
     image-rendering: pixelated;
   }
+  .difficulty-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 360px;
+    margin-top: 10px;
+  }
+  .diff-btn {
+    flex: 1;
+    background: #333;
+    color: #aaa;
+    border: 2px solid #555;
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .diff-btn.active {
+    background: #FFD700;
+    color: #000;
+    border-color: #FFA500;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
   .touch-controls {
     display: flex;
     justify-content: space-between;
     width: 360px;
-    margin-top: 15px;
+    margin-top: 12px;
     gap: 10px;
   }
   .control-btn {
@@ -79,6 +105,12 @@ game_code = """
   <canvas id="gameCanvas" width="360" height="480"></canvas>
 </div>
 
+<div class="difficulty-selector">
+  <div class="diff-btn" id="diffEasy" onclick="setDifficulty('easy')">🟢 Dễ</div>
+  <div class="diff-btn active" id="diffMedium" onclick="setDifficulty('medium')">🟡 Vừa</div>
+  <div class="diff-btn" id="diffHard" onclick="setDifficulty('hard')">🔴 Khó</div>
+</div>
+
 <div class="touch-controls">
   <div class="control-btn" id="btnLeft">◄ Trái (A)</div>
   <div class="control-btn" id="btnOk">Bắt đầu / OK</div>
@@ -97,6 +129,23 @@ const ROAD_LEFT = 60;
 const ROAD_RIGHT = 300;
 const ROAD_WIDTH = 240;
 const LANES = [90, 150, 210, 270];
+
+// Thiết lập các thông số độ khó
+const DIFFICULTY_SETTINGS = {
+  easy: { name: 'Dễ', initialSpeed: 3.5, speedInc: 0.4, spawnRate: 0.025 },
+  medium: { name: 'Vừa', initialSpeed: 5.0, speedInc: 0.8, spawnRate: 0.040 },
+  hard: { name: 'Khó', initialSpeed: 7.0, speedInc: 1.2, spawnRate: 0.060 }
+};
+
+let currentDiffKey = 'medium';
+
+function setDifficulty(key) {
+  currentDiffKey = key;
+  document.querySelectorAll('.diff-btn').forEach(btn => btn.classList.remove('active'));
+  if (key === 'easy') document.getElementById('diffEasy').classList.add('active');
+  if (key === 'medium') document.getElementById('diffMedium').classList.add('active');
+  if (key === 'hard') document.getElementById('diffHard').classList.add('active');
+}
 
 let player = { lane: 1, y: 390, width: 32, height: 50 };
 let obstacles = [];
@@ -203,7 +252,8 @@ function spawnObstacle() {
 function update() {
   if (!gameStarted || gameOver) return;
 
-  if (Math.random() < 0.04) spawnObstacle();
+  const currentSettings = DIFFICULTY_SETTINGS[currentDiffKey];
+  if (Math.random() < currentSettings.spawnRate) spawnObstacle();
 
   for (let i = 0; i < obstacles.length; i++) {
     obstacles[i].y += speed;
@@ -221,7 +271,7 @@ function update() {
     playSound(587, 'sine', 0.08);
     if (score % 100 === 0) {
       level++;
-      speed += 0.8;
+      speed += currentSettings.speedInc;
     }
   }
 }
@@ -236,11 +286,15 @@ function draw() {
     ctx.fillStyle = '#FFD700';
     ctx.font = 'bold 26px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('RACING ATTACK', canvas.width / 2, 200);
+    ctx.fillText('RACING ATTACK', canvas.width / 2, 190);
     
+    ctx.fillStyle = '#4CAF50';
+    ctx.font = 'bold 16px Arial';
+    ctx.fillText(`Mức độ: ${DIFFICULTY_SETTINGS[currentDiffKey].name.toUpperCase()}`, canvas.width / 2, 230);
+
     ctx.fillStyle = '#FFF';
-    ctx.font = '16px Arial';
-    ctx.fillText('Nhấn OK hoặc Space để bắt đầu', canvas.width / 2, 250);
+    ctx.font = '15px Arial';
+    ctx.fillText('Nhấn OK hoặc Space để bắt đầu', canvas.width / 2, 270);
     return;
   }
 
@@ -254,12 +308,17 @@ function draw() {
   ctx.fillRect(0, 0, canvas.width, 40);
 
   ctx.fillStyle = '#FFD700';
-  ctx.font = 'bold 16px Arial';
+  ctx.font = 'bold 15px Arial';
   ctx.textAlign = 'left';
-  ctx.fillText(`Score: ${score}`, 15, 25);
+  ctx.fillText(`Score: ${score}`, 12, 25);
   
+  ctx.fillStyle = '#00E5FF';
+  ctx.textAlign = 'center';
+  ctx.fillText(`[${DIFFICULTY_SETTINGS[currentDiffKey].name}]`, canvas.width / 2, 25);
+
+  ctx.fillStyle = '#FFD700';
   ctx.textAlign = 'right';
-  ctx.fillText(`Lvl: ${level}`, canvas.width - 15, 25);
+  ctx.fillText(`Lvl: ${level}`, canvas.width - 12, 25);
 
   if (gameOver) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
@@ -299,11 +358,12 @@ function moveRight() {
 
 function startGame() {
   if (!gameStarted || gameOver) {
+    const currentSettings = DIFFICULTY_SETTINGS[currentDiffKey];
     gameStarted = true;
     gameOver = false;
     score = 0;
     level = 1;
-    speed = 5;
+    speed = currentSettings.initialSpeed;
     player.lane = 1;
     obstacles = [];
     playSound(880, 'sine', 0.15);
@@ -326,4 +386,4 @@ gameLoop();
 </html>
 """
 
-components.html(game_code, height=620)
+components.html(game_code, height=660)
