@@ -10,7 +10,7 @@ st.set_page_config(
 st.title("🏎️ Racing Attack")
 st.caption("Game đua xe Racing Attack phong cách Retro!")
 
-r"""
+game_code = """
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -325,3 +325,5 @@ gameLoop();
 </body>
 </html>
 """
+
+components.html(game_code, height=620)
