@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(
@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 st.title("🏎️ Racing Attack")
-st.caption("Game đua xe Racing Attack phong cách Retro - Chọn độ khó để bắt đầu!")
+st.caption("Game đua xe Racing Attack phong cách Retro - Điều khiển hoàn toàn bằng bàn phím!")
 
 game_code = """
 <!DOCTYPE html>
@@ -46,6 +46,7 @@ game_code = """
     gap: 10px;
     width: 360px;
     margin-top: 10px;
+    margin-bottom: 5px;
   }
   .diff-btn {
     flex: 1;
@@ -66,44 +67,20 @@ game_code = """
     border-color: #FFA500;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   }
-  .touch-controls {
-    display: flex;
-    justify-content: space-between;
-    width: 360px;
-    margin-top: 12px;
-    gap: 10px;
-  }
-  .control-btn {
-    flex: 1;
-    background: #222;
-    color: #fff;
-    border: 2px solid #555;
-    padding: 12px 0;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    text-align: center;
-    box-shadow: 0 4px 0 #000;
-  }
-  .control-btn:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #000;
-    background: #333;
-  }
   .instruction {
-    margin-top: 10px;
+    margin-top: 12px;
     font-size: 13px;
     color: #aaa;
     text-align: center;
+    background: #1a1a1a;
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: 1px solid #333;
+    width: 360px;
   }
 </style>
 </head>
 <body>
-
-<div class="game-container">
-  <canvas id="gameCanvas" width="360" height="480"></canvas>
-</div>
 
 <div class="difficulty-selector">
   <div class="diff-btn" id="diffEasy" onclick="setDifficulty('easy')">🟢 Dễ</div>
@@ -111,14 +88,13 @@ game_code = """
   <div class="diff-btn" id="diffHard" onclick="setDifficulty('hard')">🔴 Khó</div>
 </div>
 
-<div class="touch-controls">
-  <div class="control-btn" id="btnLeft">◄ Trái (A)</div>
-  <div class="control-btn" id="btnOk">Bắt đầu / OK</div>
-  <div class="control-btn" id="btnRight">Phải (D) ►</div>
+<div class="game-container">
+  <canvas id="gameCanvas" width="360" height="480"></canvas>
 </div>
 
 <div class="instruction">
-  Điều khiển: Phím <b>◄ / ►</b> hoặc <b>A / D</b> | <b>Enter / Space</b> để chơi lại
+  🎮 <b>Cách chơi:</b> Dùng phím <b>◄ / ►</b> hoặc <b>A / D</b> để lái xe.<br>
+  Nhấn phím <b>Space</b> hoặc <b>Enter</b> để Bắt đầu / Chơi lại.
 </div>
 
 <script>
@@ -130,7 +106,6 @@ const ROAD_RIGHT = 300;
 const ROAD_WIDTH = 240;
 const LANES = [90, 150, 210, 270];
 
-// Thiết lập các thông số độ khó
 const DIFFICULTY_SETTINGS = {
   easy: { name: 'Dễ', initialSpeed: 3.5, speedInc: 0.4, spawnRate: 0.025 },
   medium: { name: 'Vừa', initialSpeed: 5.0, speedInc: 0.8, spawnRate: 0.040 },
@@ -286,15 +261,15 @@ function draw() {
     ctx.fillStyle = '#FFD700';
     ctx.font = 'bold 26px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText('RACING ATTACK', canvas.width / 2, 190);
+    ctx.fillText('RACING ATTACK', canvas.width / 2, 180);
     
     ctx.fillStyle = '#4CAF50';
     ctx.font = 'bold 16px Arial';
-    ctx.fillText(`Mức độ: ${DIFFICULTY_SETTINGS[currentDiffKey].name.toUpperCase()}`, canvas.width / 2, 230);
+    ctx.fillText(`Mức độ: ${DIFFICULTY_SETTINGS[currentDiffKey].name.toUpperCase()}`, canvas.width / 2, 220);
 
     ctx.fillStyle = '#FFF';
     ctx.font = '15px Arial';
-    ctx.fillText('Nhấn OK hoặc Space để bắt đầu', canvas.width / 2, 270);
+    ctx.fillText('Nhấn Space để bắt đầu', canvas.width / 2, 260);
     return;
   }
 
@@ -332,7 +307,7 @@ function draw() {
     ctx.fillStyle = '#FFF';
     ctx.font = '15px Arial';
     ctx.fillText(`Điểm của bạn: ${score}`, canvas.width / 2, 245);
-    ctx.fillText('Bấm OK / Space để chơi lại', canvas.width / 2, 275);
+    ctx.fillText('Bấm Space để chơi lại', canvas.width / 2, 275);
   }
 }
 
@@ -371,14 +346,15 @@ function startGame() {
 }
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') moveLeft();
-  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') moveRight();
-  if (e.key === 'Enter' || e.key === ' ') startGame();
+  if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+    moveLeft();
+  } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+    moveRight();
+  } else if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+    e.preventDefault();
+    startGame();
+  }
 });
-
-document.getElementById('btnLeft').addEventListener('click', moveLeft);
-document.getElementById('btnRight').addEventListener('click', moveRight);
-document.getElementById('btnOk').addEventListener('click', startGame);
 
 gameLoop();
 </script>
@@ -386,4 +362,4 @@ gameLoop();
 </html>
 """
 
-components.html(game_code, height=660)
+components.html(game_code, height=640)
