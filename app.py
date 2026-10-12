@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 st.title("🏎️ Racing Attack")
-st.caption("Game đua xe Racing Attack phong cách Retro - Đã khắc phục lỗi âm thanh nhạc nền!")
+st.caption("Game đua xe Racing Attack phong cách Retro - Nhạc nền siêu sôi động!")
 
 game_code = """
 <!DOCTYPE html>
@@ -152,36 +152,43 @@ function playSound(freq, type, duration) {
   } catch(e){}
 }
 
-// Hệ thống phát nhạc nền điện tử (Retro Chiptune BGM)
-const bgmNotes = [220, 247, 261, 293, 329, 293, 261, 247];
+// Giai điệu nhạc nền game đua xe cực kỳ sôi động, dồn dập (Fast Arcade Chiptune)
+const upbeatMelody = [
+  330, 392, 440, 523, 587, 523, 440, 392,
+  349, 440, 494, 587, 659, 587, 494, 440,
+  293, 370, 440, 494, 587, 494, 440, 370,
+  330, 392, 440, 494, 523, 494, 440, 392
+];
 let noteIndex = 0;
 
 function startBGM() {
-  stopBGM(); // Đảm bảo không bị chồng lặp nhạc nền
-  
+  stopBGM(); 
   if (audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
 
+  // Tốc độ đánh nốt cực nhanh (140ms mỗi nốt) tạo cảm giác phấn khích, bốc lửa
   bgmInterval = setInterval(() => {
     if (!gameStarted || gameOver) return;
     try {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
-      osc.type = 'triangle'; 
-      osc.frequency.value = bgmNotes[noteIndex];
       
-      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
+      // Dùng sóng 'square' mang âm hưởng điện tử mạnh mẽ
+      osc.type = 'square'; 
+      osc.frequency.value = upbeatMelody[noteIndex];
+      
+      gain.gain.setValueAtTime(0.025, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
       
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.22);
+      osc.stop(audioCtx.currentTime + 0.12);
 
-      noteIndex = (noteIndex + 1) % bgmNotes.length;
+      noteIndex = (noteIndex + 1) % upbeatMelody.length;
     } catch(e){}
-  }, 240);
+  }, 140);
 }
 
 function stopBGM() {
@@ -383,7 +390,6 @@ function moveRight() {
 }
 
 function startGame() {
-  // Buộc kích hoạt AudioContext ngay khi bấm phím bắt đầu
   if (audioCtx.state === 'suspended') {
     audioCtx.resume();
   }
@@ -398,7 +404,7 @@ function startGame() {
   obstacles = [];
   
   playSound(880, 'sine', 0.15);
-  startBGM(); // Kích hoạt nhạc nền
+  startBGM(); // Kích hoạt nhạc nền sôi động
 }
 
 document.addEventListener('keydown', (e) => {
