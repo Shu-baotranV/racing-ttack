@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 st.title("🏎️ Racing Attack")
-st.caption("Game đua xe Racing Attack phong cách Retro - Điều khiển hoàn toàn bằng bàn phím!")
+st.caption("Game đua xe Racing Attack phong cách Retro - Có âm thanh và nhạc nền sống động!")
 
 game_code = """
 <!DOCTYPE html>
@@ -130,7 +130,10 @@ let speed = 6;
 let gameOver = false;
 let gameStarted = false;
 
+// Web Audio API & Nhạc nền điện tử (Retro Chiptune BGM)
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let bgmInterval = null;
+
 function playSound(freq, type, duration) {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   try {
@@ -145,6 +148,42 @@ function playSound(freq, type, duration) {
     osc.start();
     osc.stop(audioCtx.currentTime + duration);
   } catch(e){}
+}
+
+// Hệ thống phát nhạc nền tự động lặp lại theo giai điệu game
+const bgmNotes = [220, 247, 261, 293, 329, 293, 261, 247];
+let noteIndex = 0;
+
+function startBGM() {
+  if (bgmInterval) clearInterval(bgmInterval);
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  bgmInterval = setInterval(() => {
+    if (!gameStarted || gameOver) return;
+    try {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle'; // Âm thanh kiểu máy game điện tử xưa
+      osc.frequency.value = bgmNotes[noteIndex];
+      
+      gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.2);
+
+      noteIndex = (noteIndex + 1) % bgmNotes.length;
+    } catch(e){}
+  }, 250); // Nhịp điệu dồn dập kích thích người chơi
+}
+
+function stopBGM() {
+  if (bgmInterval) {
+    clearInterval(bgmInterval);
+    bgmInterval = null;
+  }
 }
 
 function drawCar(x, y, bodyColor, isPlayer=false) {
@@ -185,7 +224,6 @@ function drawEnvironment() {
   ctx.fillStyle = '#4CAF50';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Làm tròn vị trí offset để chống giật hình khi render cây
   roadOffset = (roadOffset + speed) % 120;
   let treeOffset = Math.round(roadOffset);
 
@@ -206,7 +244,6 @@ function drawEnvironment() {
   ctx.fillStyle = '#555555';
   ctx.fillRect(ROAD_LEFT, 0, ROAD_WIDTH, canvas.height);
 
-  // Làm tròn vị trí vạch kẻ đường để chuyển động mượt mà không bị xé hình
   let lineOffset = Math.round(roadOffset % 30);
   ctx.fillStyle = '#FFFFFF';
   for (let y = -30 + lineOffset; y < canvas.height; y += 30) {
@@ -244,6 +281,7 @@ function update() {
     let obs = obstacles[i];
     if (Math.abs(LANES[player.lane] - obs.x) < 22 && Math.abs(player.y - obs.y) < 42) {
       gameOver = true;
+      stopBGM();
       playSound(120, 'sawtooth', 0.5);
     }
   }
@@ -350,6 +388,7 @@ function startGame() {
     player.lane = 1;
     obstacles = [];
     playSound(880, 'sine', 0.15);
+    startBGM(); // Kích hoạt nhạc nền khi chơi
   }
 }
 
