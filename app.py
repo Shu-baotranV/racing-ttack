@@ -106,11 +106,10 @@ const ROAD_RIGHT = 300;
 const ROAD_WIDTH = 240;
 const LANES = [90, 150, 210, 270];
 
-// Tăng tần số xuất hiện xe cản trở (spawnRate) để đường đua đông đúc hơn, không bị trống trải
 const DIFFICULTY_SETTINGS = {
-  easy: { name: 'Dễ', initialSpeed: 3.5, speedInc: 0.4, spawnRate: 0.045 },
-  medium: { name: 'Vừa', initialSpeed: 5.0, speedInc: 0.8, spawnRate: 0.065 },
-  hard: { name: 'Khó', initialSpeed: 7.0, speedInc: 1.2, spawnRate: 0.090 }
+  easy: { name: 'Dễ', initialSpeed: 4, speedInc: 0.5, spawnRate: 0.045 },
+  medium: { name: 'Vừa', initialSpeed: 6, speedInc: 1.0, spawnRate: 0.065 },
+  hard: { name: 'Khó', initialSpeed: 8, speedInc: 1.5, spawnRate: 0.090 }
 };
 
 let currentDiffKey = 'medium';
@@ -127,7 +126,7 @@ let player = { lane: 1, y: 390, width: 32, height: 50 };
 let obstacles = [];
 let score = 0;
 let level = 1;
-let speed = 5;
+let speed = 6;
 let gameOver = false;
 let gameStarted = false;
 
@@ -149,32 +148,35 @@ function playSound(freq, type, duration) {
 }
 
 function drawCar(x, y, bodyColor, isPlayer=false) {
+  const rx = Math.round(x);
+  const ry = Math.round(y);
+
   ctx.fillStyle = '#111';
-  ctx.fillRect(x - 17, y + 6, 4, 12);
-  ctx.fillRect(x + 13, y + 6, 4, 12);
-  ctx.fillRect(x - 17, y + 32, 4, 12);
-  ctx.fillRect(x + 13, y + 32, 4, 12);
+  ctx.fillRect(rx - 17, ry + 6, 4, 12);
+  ctx.fillRect(rx + 13, ry + 6, 4, 12);
+  ctx.fillRect(rx - 17, ry + 32, 4, 12);
+  ctx.fillRect(rx + 13, ry + 32, 4, 12);
 
   ctx.fillStyle = bodyColor;
-  ctx.fillRect(x - 13, y, 26, 48);
+  ctx.fillRect(rx - 13, ry, 26, 48);
 
   if (isPlayer) {
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(x - 2, y, 4, 48);
+    ctx.fillRect(rx - 2, ry, 4, 48);
   }
 
   ctx.fillStyle = '#111';
-  ctx.fillRect(x - 10, y + 10, 20, 10);
-  ctx.fillRect(x - 9, y + 32, 18, 6);
+  ctx.fillRect(rx - 10, ry + 10, 20, 10);
+  ctx.fillRect(rx - 9, ry + 32, 18, 6);
 
   if (isPlayer) {
     ctx.fillStyle = '#ffea00';
-    ctx.fillRect(x - 11, y + 1, 5, 3);
-    ctx.fillRect(x + 6, y + 1, 5, 3);
+    ctx.fillRect(rx - 11, ry + 1, 5, 3);
+    ctx.fillRect(rx + 6, ry + 1, 5, 3);
   } else {
     ctx.fillStyle = '#ff2222';
-    ctx.fillRect(x - 11, y + 44, 5, 3);
-    ctx.fillRect(x + 6, y + 44, 5, 3);
+    ctx.fillRect(rx - 11, ry + 44, 5, 3);
+    ctx.fillRect(rx + 6, ry + 44, 5, 3);
   }
 }
 
@@ -183,9 +185,12 @@ function drawEnvironment() {
   ctx.fillStyle = '#4CAF50';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Giảm số lượng cây 2 bên đường (khoảng cách 120 pixel)
+  // Làm tròn vị trí offset để chống giật hình khi render cây
+  roadOffset = (roadOffset + speed) % 120;
+  let treeOffset = Math.round(roadOffset);
+
   ctx.fillStyle = '#2E7D32';
-  for (let y = -80 + (roadOffset % 120); y < canvas.height; y += 120) {
+  for (let y = -80 + treeOffset; y < canvas.height; y += 120) {
     ctx.beginPath();
     ctx.arc(30, y, 14, 0, Math.PI * 2);
     ctx.fill();
@@ -201,9 +206,10 @@ function drawEnvironment() {
   ctx.fillStyle = '#555555';
   ctx.fillRect(ROAD_LEFT, 0, ROAD_WIDTH, canvas.height);
 
+  // Làm tròn vị trí vạch kẻ đường để chuyển động mượt mà không bị xé hình
+  let lineOffset = Math.round(roadOffset % 30);
   ctx.fillStyle = '#FFFFFF';
-  roadOffset = (roadOffset + speed) % 30;
-  for (let y = -30 + roadOffset; y < canvas.height; y += 30) {
+  for (let y = -30 + lineOffset; y < canvas.height; y += 30) {
     ctx.fillRect(LANES[0] + 30 - 2, y, 4, 15);
     ctx.fillRect(LANES[1] + 30 - 2, y, 4, 15);
     ctx.fillRect(LANES[2] + 30 - 2, y, 4, 15);
@@ -215,7 +221,6 @@ const CAR_COLORS = ['#E53935', '#1E88E5', '#FB8C00', '#8E24AA', '#43A047'];
 function spawnObstacle() {
   const laneIndex = Math.floor(Math.random() * LANES.length);
   const lastObs = obstacles[obstacles.length - 1];
-  // Rút ngắn khoảng cách tối thiểu giữa các xe để tránh tạo khoảng trống quá xa
   if (!lastObs || lastObs.y > 65) {
     const randomColor = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
     obstacles.push({
