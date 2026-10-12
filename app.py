@@ -106,10 +106,11 @@ const ROAD_RIGHT = 300;
 const ROAD_WIDTH = 240;
 const LANES = [90, 150, 210, 270];
 
+// Tăng tần số xuất hiện xe cản trở (spawnRate) để đường đua đông đúc hơn, không bị trống trải
 const DIFFICULTY_SETTINGS = {
-  easy: { name: 'Dễ', initialSpeed: 3.5, speedInc: 0.4, spawnRate: 0.025 },
-  medium: { name: 'Vừa', initialSpeed: 5.0, speedInc: 0.8, spawnRate: 0.040 },
-  hard: { name: 'Khó', initialSpeed: 7.0, speedInc: 1.2, spawnRate: 0.060 }
+  easy: { name: 'Dễ', initialSpeed: 3.5, speedInc: 0.4, spawnRate: 0.045 },
+  medium: { name: 'Vừa', initialSpeed: 5.0, speedInc: 0.8, spawnRate: 0.065 },
+  hard: { name: 'Khó', initialSpeed: 7.0, speedInc: 1.2, spawnRate: 0.090 }
 };
 
 let currentDiffKey = 'medium';
@@ -182,8 +183,9 @@ function drawEnvironment() {
   ctx.fillStyle = '#4CAF50';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Giảm số lượng cây 2 bên đường (khoảng cách 120 pixel)
   ctx.fillStyle = '#2E7D32';
-  for (let y = -40 + (roadOffset % 60); y < canvas.height; y += 60) {
+  for (let y = -80 + (roadOffset % 120); y < canvas.height; y += 120) {
     ctx.beginPath();
     ctx.arc(30, y, 14, 0, Math.PI * 2);
     ctx.fill();
@@ -213,7 +215,8 @@ const CAR_COLORS = ['#E53935', '#1E88E5', '#FB8C00', '#8E24AA', '#43A047'];
 function spawnObstacle() {
   const laneIndex = Math.floor(Math.random() * LANES.length);
   const lastObs = obstacles[obstacles.length - 1];
-  if (!lastObs || lastObs.y > 90) {
+  // Rút ngắn khoảng cách tối thiểu giữa các xe để tránh tạo khoảng trống quá xa
+  if (!lastObs || lastObs.y > 65) {
     const randomColor = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
     obstacles.push({
       lane: laneIndex,
