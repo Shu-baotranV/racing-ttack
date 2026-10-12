@@ -8,7 +8,7 @@ st.set_page_config(
 )
 
 st.title("🏎️ Racing Attack")
-st.caption("Game đua xe Racing Attack phong cách Retro - Nhạc nền siêu sôi động!")
+st.caption("Game đua xe Racing Attack phong cách Retro - Hỗ trợ cả Bàn phím và Cảm ứng Điện thoại!")
 
 game_code = """
 <!DOCTYPE html>
@@ -17,7 +17,7 @@ game_code = """
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
   body {
     background: #111;
     display: flex;
@@ -67,13 +67,40 @@ game_code = """
     border-color: #FFA500;
     box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
   }
+  /* Nút bấm cảm ứng dành riêng cho điện thoại */
+  .touch-controls {
+    display: flex;
+    justify-content: space-between;
+    width: 360px;
+    margin-top: 10px;
+    gap: 10px;
+  }
+  .control-btn {
+    flex: 1;
+    background: #222;
+    color: #fff;
+    border: 2px solid #555;
+    padding: 14px 0;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    box-shadow: 0 4px 0 #000;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .control-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #000;
+    background: #444;
+  }
   .instruction {
-    margin-top: 12px;
-    font-size: 13px;
+    margin-top: 10px;
+    font-size: 12px;
     color: #aaa;
     text-align: center;
     background: #1a1a1a;
-    padding: 10px 15px;
+    padding: 8px 12px;
     border-radius: 6px;
     border: 1px solid #333;
     width: 360px;
@@ -92,9 +119,16 @@ game_code = """
   <canvas id="gameCanvas" width="360" height="480"></canvas>
 </div>
 
+<!-- Nút điều khiển cảm ứng cho điện thoại -->
+<div class="touch-controls">
+  <div class="control-btn" id="btnLeft">◄ Trái (A)</div>
+  <div class="control-btn" id="btnStart" style="background: #1b5e20;">Bắt đầu / OK</div>
+  <div class="control-btn" id="btnRight">Phải (D) ►</div>
+</div>
+
 <div class="instruction">
-  🎮 <b>Cách chơi:</b> Dùng phím <b>◄ / ►</b> hoặc <b>A / D</b> để lái xe.<br>
-  Nhấn phím <b>Space</b> hoặc <b>Enter</b> để Bắt đầu / Chơi lại.
+  🎮 PC: Phím <b>◄ / ►</b> hoặc <b>A / D</b> | <b>Space</b> Bắt đầu<br>
+  📱 Điện thoại: Chạm trực tiếp vào các nút phía trên
 </div>
 
 <script>
@@ -152,7 +186,7 @@ function playSound(freq, type, duration) {
   } catch(e){}
 }
 
-// Giai điệu nhạc nền game đua xe cực kỳ sôi động, dồn dập (Fast Arcade Chiptune)
+// Nhạc nền game đua xe cực kỳ sôi động, dồn dập (Fast Arcade Chiptune)
 const upbeatMelody = [
   330, 392, 440, 523, 587, 523, 440, 392,
   349, 440, 494, 587, 659, 587, 494, 440,
@@ -167,14 +201,12 @@ function startBGM() {
     audioCtx.resume();
   }
 
-  // Tốc độ đánh nốt cực nhanh (140ms mỗi nốt) tạo cảm giác phấn khích, bốc lửa
   bgmInterval = setInterval(() => {
     if (!gameStarted || gameOver) return;
     try {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       
-      // Dùng sóng 'square' mang âm hưởng điện tử mạnh mẽ
       osc.type = 'square'; 
       osc.frequency.value = upbeatMelody[noteIndex];
       
@@ -239,6 +271,7 @@ function drawEnvironment() {
   roadOffset = (roadOffset + speed) % 120;
   let treeOffset = Math.round(roadOffset);
 
+  // Giảm bớt số cây 2 bên đường (khoảng cách 120px) cho đỡ rối mắt
   ctx.fillStyle = '#2E7D32';
   for (let y = -80 + treeOffset; y < canvas.height; y += 120) {
     ctx.beginPath();
@@ -327,7 +360,7 @@ function draw() {
 
     ctx.fillStyle = '#FFF';
     ctx.font = '15px Arial';
-    ctx.fillText('Nhấn Space để bắt đầu', canvas.width / 2, 260);
+    ctx.fillText('Bấm Space hoặc nút Bắt đầu', canvas.width / 2, 260);
     return;
   }
 
@@ -365,7 +398,7 @@ function draw() {
     ctx.fillStyle = '#FFF';
     ctx.font = '15px Arial';
     ctx.fillText(`Điểm của bạn: ${score}`, canvas.width / 2, 245);
-    ctx.fillText('Bấm Space để chơi lại', canvas.width / 2, 275);
+    ctx.fillText('Bấm Space / Nút OK để chơi lại', canvas.width / 2, 275);
   }
 }
 
@@ -404,9 +437,10 @@ function startGame() {
   obstacles = [];
   
   playSound(880, 'sine', 0.15);
-  startBGM(); // Kích hoạt nhạc nền sôi động
+  startBGM();
 }
 
+// Bắt sự kiện bàn phím PC
 document.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
     moveLeft();
@@ -418,10 +452,20 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// Bắt sự kiện bấm nút cảm ứng trên điện thoại
+document.getElementById('btnLeft').addEventListener('click', moveLeft);
+document.getElementById('btnRight').addEventListener('click', moveRight);
+document.getElementById('btnStart').addEventListener('click', startGame);
+
+// Hỗ trợ cảm ứng nhạy hơn trên màn hình di động (tránh độ trễ click)
+document.getElementById('btnLeft').addEventListener('touchstart', (e) => { e.preventDefault(); moveLeft(); });
+document.getElementById('btnRight').addEventListener('touchstart', (e) => { e.preventDefault(); moveRight(); });
+document.getElementById('btnStart').addEventListener('touchstart', (e) => { e.preventDefault(); startGame(); });
+
 gameLoop();
 </script>
 </body>
 </html>
 """
 
-components.html(game_code, height=640)
+components.html(game_code, height=720)
